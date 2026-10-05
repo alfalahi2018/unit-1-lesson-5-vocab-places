@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fun Zone Adventure – Grade 7 English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F2A44; --sun:#FFC845; --sun-d:#E5A800; --coral:#FF6B57; --teal:#12B5A6;
+  --sky:#E8F3FF; --paper:#FFFFFF; --violet:#5B47E0; --good:#1FA971; --bad:#E5484D;
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Baloo 2','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  font-weight:500; color:var(--ink); background:var(--sky);
+  background-image:
+    radial-gradient(circle at 12% 8%, #fff 0 38px, transparent 39px),
+    radial-gradient(circle at 18% 8%, #fff 0 26px, transparent 27px),
+    radial-gradient(circle at 86% 14%, #fff 0 34px, transparent 35px),
+    radial-gradient(circle at 92% 14%, #fff 0 22px, transparent 23px);
+  background-attachment:fixed;
+  min-height:100vh; -webkit-tap-highlight-color:transparent;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+#app{max-width:1000px;margin:0 auto;padding:12px 14px 70px}
+h1,h2,h3{margin:0;line-height:1.1}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--violet);outline-offset:2px}
+
+/* ---------- HUD / passport ---------- */
+.hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:var(--radius);padding:8px 14px;margin-bottom:12px}
+.hearts{font-size:22px;letter-spacing:2px;min-width:120px}
+.passport{display:flex;gap:6px;margin:0 auto}
+.stamp-slot{width:34px;height:34px;border-radius:50%;border:2px dashed rgba(255,255,255,.4);display:grid;place-items:center;font-size:18px;filter:grayscale(1) opacity(.35)}
+.stamp-slot.got{border:2px solid var(--sun);filter:none;background:rgba(255,200,69,.18);transform:rotate(-8deg)}
+.score{font-weight:800;font-size:20px}
+.mute{background:transparent;border:0;color:#fff;font-size:20px;padding:2px 6px}
+
+/* ---------- start ticket ---------- */
+.ticket{
+  max-width:640px;margin:18px auto;background:var(--sun);border-radius:26px;padding:26px 24px 22px;position:relative;text-align:center;
+  box-shadow:0 10px 0 var(--sun-d);
+  -webkit-mask:radial-gradient(circle 16px at 0 62%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 16px at 100% 62%,#0000 98%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 16px at 0 62%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 16px at 100% 62%,#0000 98%,#000) right/51% 100% no-repeat;
+}
+.ticket .adm{font-weight:700;font-size:15px;opacity:.75}
+.ticket h1{font-size:clamp(36px,8vw,60px);font-weight:800;margin:4px 0 6px}
+.ticket .sub{font-size:18px;margin:0 0 14px}
+.emoji-row{font-size:clamp(28px,6vw,40px);display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
+.perf{border-top:3px dashed rgba(31,42,68,.35);margin:16px -6px 14px}
+.ticket input{font:inherit;font-weight:700;width:100%;max-width:340px;text-align:center;padding:10px 14px;border-radius:14px;border:3px solid var(--ink);background:#fff;color:var(--ink)}
+.rules{list-style:none;padding:0;margin:14px auto 16px;max-width:420px;text-align:left;font-size:17px}
+.rules li{padding:2px 0}
+.btn{background:var(--violet);color:#fff;border:0;border-radius:16px;padding:11px 26px;font-weight:800;font-size:20px;box-shadow:0 5px 0 #3C2DAA;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #3C2DAA}
+.btn[disabled]{background:#9AA3B8;box-shadow:0 5px 0 #7A839A;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 5px 0 #C9D2E3;border:2px solid var(--ink)}
+.credit{font-weight:700;font-size:16px;margin-top:14px}
+
+/* ---------- level header ---------- */
+.lvl-head{background:var(--paper);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;box-shadow:0 4px 0 rgba(31,42,68,.12)}
+.lvl-head h2{font-size:24px;font-weight:800}
+.lvl-head p{margin:2px 0 8px;font-size:17px}
+.timer{display:flex;align-items:center;gap:10px}
+.track{flex:1;height:14px;background:#DDE6F3;border-radius:99px;overflow:hidden}
+.bar{height:100%;width:100%;background:var(--teal);border-radius:99px;transition:width 1s linear,background .3s}
+.timer.hurry .bar{background:var(--coral)}
+.timer.hurry #ttxt{color:var(--coral);animation:pulse .6s infinite alternate}
+#ttxt{font-weight:800;min-width:48px;text-align:right}
+@keyframes pulse{to{transform:scale(1.18)}}
+.prog{font-weight:800;font-size:18px;margin:4px 2px 8px}
+
+/* ---------- cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 0 rgba(31,42,68,.14);transition:transform .15s,box-shadow .15s}
+.card.hover{transform:scale(1.05);box-shadow:0 0 0 4px var(--violet)}
+.scene{height:86px;display:grid;place-items:center;position:relative;background:linear-gradient(160deg,var(--a),var(--b))}
+.scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22px;background:rgba(255,255,255,.28);border-radius:60% 60% 0 0/100% 100% 0 0}
+.scene .main{font-size:50px;z-index:1;filter:drop-shadow(0 4px 0 rgba(0,0,0,.18))}
+.scene .deco{position:absolute;right:8px;top:4px;font-size:22px;opacity:.9;z-index:1}
+.slot{min-height:44px;margin:7px;border:2.5px dashed #B6C3DA;border-radius:12px;display:grid;place-items:center;font-size:14px;color:#8794AE}
+.slot:empty::before{content:"drop here"}
+.slot:not(:empty){border:0;margin:6px 7px}
+.card.done .slot{margin:6px 7px}
+.label{text-align:center;font-weight:800;font-size:15px;padding:5px 4px 8px;line-height:1.1}
+.grid.small{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.grid.small .scene{height:64px}
+.grid.small .scene .main{font-size:38px}
+.card.flash{animation:flash .6s}
+@keyframes flash{30%{box-shadow:0 0 0 6px var(--good);transform:scale(1.08)}}
+
+/* ---------- chips (draggable) ---------- */
+.chip{
+  display:inline-block;background:var(--sun);color:var(--ink);font-weight:800;font-size:18px;
+  padding:7px 14px;border-radius:12px;box-shadow:0 4px 0 var(--sun-d);cursor:grab;
+  touch-action:none;user-select:none;-webkit-user-select:none;text-align:center;line-height:1.15;
+}
+.chip.selected{outline:4px solid var(--violet);outline-offset:2px}
+.chip.dragging{opacity:.25}
+.chip.locked{background:var(--good);color:#fff;box-shadow:0 3px 0 #13744B;cursor:default}
+.chip.bad{background:var(--bad);color:#fff;box-shadow:0 4px 0 #A82A2E}
+.chip.ghost{position:fixed;z-index:200;pointer-events:none;transform:rotate(-4deg) scale(1.08);box-shadow:0 14px 20px rgba(0,0,0,.28)}
+.card .chip{display:block;width:100%;font-size:14px;padding:6px 4px;box-shadow:0 3px 0 var(--sun-d)}
+.card .chip.locked{box-shadow:0 3px 0 #13744B}
+.tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:12px;background:rgba(255,255,255,.85);border-radius:var(--radius);border:3px dashed #B6C3DA;margin-top:12px;min-height:64px}
+.tray.sticky{position:sticky;bottom:6px;z-index:20;backdrop-filter:blur(4px);box-shadow:0 -4px 14px rgba(31,42,68,.18)}
+.tray.hover{border-color:var(--violet)}
+
+.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+/* ---------- level 2 clue ---------- */
+.clue-area{background:var(--paper);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;text-align:center;box-shadow:0 4px 0 rgba(31,42,68,.12)}
+.chip.clue{font-size:clamp(18px,4.2vw,26px);padding:12px 20px;background:var(--coral);color:#fff;box-shadow:0 5px 0 #C9432F;max-width:100%}
+
+/* ---------- level 3 / 4 ---------- */
+.slots{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:14px 8px;background:var(--paper);border-radius:var(--radius);box-shadow:0 4px 0 rgba(31,42,68,.12)}
+.slots .slot{min-width:64px;min-height:50px;margin:0;padding:0 4px;border:2.5px dashed #B6C3DA;background:#F6F9FE}
+.slots .slot:empty::before{content:""}
+.slots .slot:not(:empty){border:2.5px solid transparent}
+.slots .slot.hover{border-color:var(--violet);background:#EDEAFF}
+.actions{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.hint{text-align:center;margin-top:10px;font-size:15px;color:#4A5879}
+.sentence{background:var(--paper);border-radius:var(--radius);padding:26px 18px;font-size:clamp(22px,5vw,32px);font-weight:700;text-align:center;line-height:2;box-shadow:0 4px 0 rgba(31,42,68,.12)}
+.gap{display:inline-grid;place-items:center;min-width:150px;min-height:48px;vertical-align:middle;border:3px dashed var(--violet);border-radius:12px;background:#F2F0FF;margin:0 4px;padding:0 4px}
+.gap.hover{background:#DDD8FF}
+.gap .chip{font-size:inherit}
+.options{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.options .chip{font-size:22px;padding:10px 20px}
+
+/* ---------- toast / modal / confetti ---------- */
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:300;padding:10px 20px;border-radius:99px;font-weight:800;color:#fff;box-shadow:0 8px 18px rgba(0,0,0,.25);animation:toast 1.8s forwards;max-width:92vw;text-align:center}
+.toast.good{background:var(--good)} .toast.bad{background:var(--bad)}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-20px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.overlay{position:fixed;inset:0;background:rgba(31,42,68,.7);display:grid;place-items:center;z-index:400;padding:16px}
+.modal{background:#fff;border-radius:26px;padding:26px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 0 rgba(0,0,0,.2)}
+.modal h2{font-size:30px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:19px;margin:6px 0 16px}
+.big-stamp{width:120px;height:120px;border-radius:50%;margin:0 auto 12px;border:5px double var(--coral);color:var(--coral);display:grid;place-items:center;font-size:56px;transform:rotate(-10deg);animation:stamp .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stamp{from{transform:rotate(-10deg) scale(2.6);opacity:0}}
+.conf{position:fixed;top:-16px;width:10px;height:14px;z-index:350;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(108vh) rotate(720deg)}}
+
+/* ---------- certificate ---------- */
+.cert{max-width:680px;margin:14px auto;background:#fff;border-radius:26px;padding:30px 22px;text-align:center;border:8px double var(--sun);box-shadow:0 10px 0 rgba(31,42,68,.14)}
+.cert h2{font-size:clamp(28px,6vw,42px);font-weight:800}
+.cert .name{font-size:clamp(30px,7vw,46px);font-weight:800;color:var(--violet);margin:10px 0}
+.cert .stars{font-size:44px;margin:8px 0}
+.cert .stats{font-size:19px}
+
+footer.site{position:fixed;left:0;right:0;bottom:0;text-align:center;font-weight:700;font-size:14px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(31,42,68,.92);color:#fff;z-index:10}
+
+@media (max-width:520px){
+  .grid{grid-template-columns:repeat(3,1fr);gap:7px}
+  .scene{height:62px}.scene .main{font-size:36px}.scene .deco{font-size:15px;right:4px}
+  .card .chip{font-size:12px;padding:5px 2px}
+  .slot{margin:5px;min-height:34px;font-size:11px}
+  .grid.small{grid-template-columns:repeat(3,1fr)}
+  .grid.small .scene{height:50px}.grid.small .scene .main{font-size:30px}
+  .label{font-size:13px}
+  .chip{font-size:16px}
+  .tray.sticky .chip{font-size:15px;padding:6px 10px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  body *{visibility:hidden}
+  .cert,.cert *{visibility:visible}
+  .cert{position:absolute;left:0;top:0;width:100%;box-shadow:none}
+  footer.site{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud" id="hud" hidden>
+    <div class="hearts" id="hearts" aria-label="Lives"></div>
+    <div class="passport" id="passport" aria-label="Stamps"></div>
+    <div class="score" id="score">⭐ 0</div>
+    <button class="mute" id="mute" aria-label="Sound on or off">🔊</button>
+  </div>
+  <main id="stage"></main>
+</div>
+<footer class="site">Created by T.Badria Alfalahi · Grade 7 English · Unit 1</footer>
+
+<script>
+/* ============ DATA ============ */
+const PLACES=[
+ {id:'bowling',name:'bowling alley',emoji:'🎳',deco:'🏆',a:'#FFB199',b:'#FF6B57',clue:'You roll a heavy ball to knock down pins.'},
+ {id:'aquarium',name:'aquarium',emoji:'🐠',deco:'🐢',a:'#9BE7FF',b:'#2E86DE',clue:'You can see sharks, turtles and colourful fish.'},
+ {id:'softplay',name:'soft play centre',emoji:'🧸',deco:'🎈',a:'#FFD1F0',b:'#FF8AD8',clue:'Little children jump, slide and play in a ball pit.'},
+ {id:'science',name:'science museum',emoji:'🔬',deco:'🧪',a:'#C3F0CA',b:'#2BB673',clue:'You can do experiments and learn about inventions.'},
+ {id:'cinema',name:'3D cinema',emoji:'🎬',deco:'🕶️',a:'#C9B8FF',b:'#5B47E0',clue:'You wear special glasses to watch a film.'},
+ {id:'gallery',name:'art gallery',emoji:'🖼️',deco:'🎨',a:'#FFE9A8',b:'#F5B700',clue:'You look at paintings and sculptures here.'},
+ {id:'icerink',name:'ice rink',emoji:'⛸️',deco:'❄️',a:'#E0F4FF',b:'#7CC4F2',clue:'You wear skates and glide on the ice.'},
+ {id:'safari',name:'safari park',emoji:'🦁',deco:'🦒',a:'#FFE0A3',b:'#E08E1B',clue:'You drive through and see lions, giraffes and zebras.'},
+ {id:'themepark',name:'theme park',emoji:'🎢',deco:'🎡',a:'#FFC2C2',b:'#E5484D',clue:'You ride roller coasters and eat candy floss.'},
+ {id:'circus',name:'circus',emoji:'🎪',deco:'🤹',a:'#FFB8D2',b:'#D6336C',clue:'You watch clowns, acrobats and jugglers under a big tent.'},
+ {id:'planetarium',name:'planetarium',emoji:'🪐',deco:'⭐',a:'#8C9EFF',b:'#1F2A6B',clue:'You watch stars and planets on a dome-shaped ceiling.'},
+ {id:'adventure',name:'adventure playground',emoji:'🧗',deco:'🌳',a:'#B5EAA2',b:'#3FA34D',clue:'You climb ropes and cross bridges outdoors.'}
+];
+const SENTS=[
+ 'We are visiting the science museum on Friday.',
+ 'Sara is meeting her friends at the ice rink tomorrow.',
+ 'I am not going to the circus this weekend.',
+ 'Are you going to the 3D cinema tonight?',
+ 'They are taking the bus to the safari park on Saturday.',
+ 'Ali is playing bowling with his cousins next week.'
+];
+const ITEMS=[
+ {s:'Tomorrow we ___ to the aquarium.',o:['are going','went','goes'],a:'are going'},
+ {s:'Sara ___ her cousins at the theme park on Saturday.',o:['is meeting','meet','met'],a:'is meeting'},
+ {s:'I ___ to the art gallery this weekend. I am busy.',o:['am not going','not going',"don't going"],a:'am not going'},
+ {s:'___ they coming to the ice rink with us?',o:['Are','Do','Is'],a:'Are'},
+ {s:'My brother ___ bowling with his friends next Friday.',o:['is playing','play','are playing'],a:'is playing'},
+ {s:'We ___ the safari park on Sunday morning.',o:['are visiting','visits','is visiting'],a:'are visiting'}
+];
+const LEVELS=[
+ {name:'Match the place',emoji:'📍',time:150,help:'Drag each name onto the right picture.',render:L1},
+ {name:'Where am I?',emoji:'🔎',time:120,help:'Read the clue. Drag it to the right place.',render:L2},
+ {name:'Build the sentence',emoji:'🧩',time:180,help:'Put the words in order to talk about future plans.',render:L3},
+ {name:'Choose the right form',emoji:'✏️',time:120,help:'Drag the correct verb form into the gap.',render:L4}
+];
+const MAX_SCORE=12*10+8*15+6*20+6*15;
+
+/* ============ HELPERS ============ */
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const state={name:'',lives:5,score:0,level:0,stamps:[false,false,false,false],mute:false,scoreAtStart:0};
+let dropHandler=null, selected=null, dragCtx=null, tInt=null, tLeft=0, tTotal=1;
+
+/* ============ SOUND ============ */
+let ac;
+function beep(freq,dur,type='sine',vol=.15,delay=0){
+  if(state.mute) return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+delay;
+    o.type=type;o.frequency.value=freq;o.connect(g);g.connect(ac.destination);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.start(t);o.stop(t+dur);
+  }catch(e){}
+}
+const sfx={
+  ok(){beep(660,.15);beep(880,.2,'sine',.15,.1)},
+  no(){beep(200,.3,'sawtooth',.09)},
+  win(){[523,659,784,1047].forEach((f,i)=>beep(f,.28,'triangle',.15,i*.12))},
+  tick(){beep(900,.05,'square',.03)},
+  pop(){beep(500,.06,'sine',.1)}
+};
+
+/* ============ HUD ============ */
+function renderHUD(){
+  $('#hearts').textContent='❤️'.repeat(Math.max(0,state.lives))+'🤍'.repeat(Math.max(0,5-state.lives));
+  $('#score').textContent='⭐ '+state.score;
+  $('#passport').innerHTML=LEVELS.map((l,i)=>`<div class="stamp-slot ${state.stamps[i]?'got':''}" title="${l.name}">${l.emoji}</div>`).join('');
+  $('#mute').textContent=state.mute?'🔇':'🔊';
+}
+$('#mute').onclick=()=>{state.mute=!state.mute;renderHUD()};
+
+function toast(msg,type){
+  const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),1800);
+}
+function confetti(){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const cols=['#FFC845','#FF6B57','#12B5A6','#5B47E0','#1FA971','#FF8AD8'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div');c.className='conf';
+    c.style.left=Math.random()*100+'vw';c.style.background=pick(cols);
+    c.style.animationDuration=(2+Math.random()*2)+'s';c.style.animationDelay=Math.random()*.6+'s';
+    document.body.appendChild(c);setTimeout(()=>c.remove(),4800);
+  }
+}
+function showModal(html,btnText,cb){
+  const o=document.createElement('div');o.className='overlay';
+  o.innerHTML=`<div class="modal" role="dialog" aria-modal="true">${html}<button class="btn" id="mbtn">${btnText}</button></div>`;
+  document.body.appendChild(o);
+  const b=o.querySelector('#mbtn');b.focus();
+  b.onclick=()=>{o.remove();cb&&cb()};
+}
+
+/* ============ TIMER ============ */
+function startTimer(sec){
+  stopTimer();tTotal=tLeft=sec;updTimer();
+  tInt=setInterval(()=>{
+    tLeft--;updTimer();
+    if(tLeft>0&&tLeft<=10) sfx.tick();
+    if(tLeft<=0){stopTimer();toast("Time's up! Keep going – no bonus now.",'bad')}
+  },1000);
+}
+function stopTimer(){clearInterval(tInt);tInt=null}
+function updTimer(){
+  const bar=$('.bar'),txt=$('#ttxt'),box=$('.timer');
+  if(!bar) return;
+  const left=Math.max(0,tLeft);
+  bar.style.width=(left/tTotal*100)+'%';
+  txt.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+  box.classList.toggle('hurry',left/tTotal<=.25&&left>0);
+}
+
+/* ============ DRAG & DROP ENGINE (mouse + touch + tap) ============ */
+function clearSel(){if(selected){selected.classList.remove('selected');selected=null}}
+function clearHover(){document.querySelectorAll('.hover').forEach(e=>e.classList.remove('hover'))}
+function zoneAt(x,y){const el=document.elementFromPoint(x,y);return el&&el.closest?el.closest('.zone'):null}
+document.addEventListener('pointerdown',e=>{
+  const chip=e.target.closest&&e.target.closest('.chip:not(.locked):not(.ghost)');
+  if(!chip||!dropHandler) return;
+  e.preventDefault();
+  dragCtx={chip,sx:e.clientX,sy:e.clientY,moved:false};
+});
+document.addEventListener('pointermove',e=>{
+  const d=dragCtx;if(!d) return;
+  if(!d.moved&&Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>6){
+    d.moved=true;const r=d.chip.getBoundingClientRect();
+    d.ghost=d.chip.cloneNode(true);d.ghost.classList.add('ghost');d.ghost.classList.remove('selected');
+    d.ghost.style.width=r.width+'px';document.body.appendChild(d.ghost);
+    d.ox=d.sx-r.left;d.oy=d.sy-r.top;d.chip.classList.add('dragging');clearSel();
+  }
+  if(d.moved){
+    d.ghost.style.left=(e.clientX-d.ox)+'px';d.ghost.style.top=(e.clientY-d.oy)+'px';
+    clearHover();const z=zoneAt(e.clientX,e.clientY);if(z) z.classList.add('hover');
+  }
+});
+function endDrag(e,cancel){
+  const d=dragCtx;if(!d) return;dragCtx=null;
+  if(d.moved){
+    d.ghost.remove();d.chip.classList.remove('dragging');clearHover();
+    if(!cancel){const z=zoneAt(e.clientX,e.clientY);if(z&&dropHandler) dropHandler(d.chip,z)}
+  }else if(!cancel){
+    if(selected===d.chip) clearSel();
+    else{clearSel();selected=d.chip;d.chip.classList.add('selected')}
+  }
+}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>endDrag(e,true));
+document.addEventListener('click',e=>{
+  const z=e.target.closest&&e.target.closest('.zone');
+  if(z&&selected&&!e.target.closest('.chip')&&dropHandler){const c=selected;clearSel();dropHandler(c,z)}
+});
+
+/* ============ GAME FLOW ============ */
+function loseLife(){
+  state.lives--;renderHUD();
+  if(state.lives<=0){
+    stopTimer();dropHandler=null;
+    showModal('<div class="big-stamp">💔</div><h2>Out of lives!</h2><p>Do not worry. Try this level again.</p>','Try again',()=>{
+      state.lives=3;state.score=state.scoreAtStart;renderHUD();startLevel(state.level);
+    });
+  }
+}
+function wrong(chip,zone){
+  sfx.no();
+  [chip,zone].forEach(el=>{if(!el)return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')});
+  toast(pick(['Not quite – try again!','Oops! Look again.','Almost! Think about it.']),'bad');
+  loseLife();
+}
+function right(points){
+  state.score+=points;renderHUD();sfx.ok();
+  toast(pick(['Great job! 🎉','Perfect! ⭐','Well done! 👏','Yes! Correct! ✅']),'good');
+}
+function startGame(){
+  state.name=($('#pname')?.value||'').trim();
+  Object.assign(state,{lives:5,score:0,level:0,stamps:[false,false,false,false]});
+  $('#hud').hidden=false;renderHUD();startLevel(0);
+}
+function startLevel(i){
+  state.level=i;state.scoreAtStart=state.score;dropHandler=null;clearSel();
+  const L=LEVELS[i];
+  $('#stage').innerHTML=`
+    <div class="lvl-head">
+      <h2>${L.emoji} Level ${i+1} of ${LEVELS.length}: ${L.name}</h2>
+      <p>${L.help} <small>(Or tap a word, then tap a box.)</small></p>
+      <div class="timer"><div class="track"><div class="bar"></div></div><span id="ttxt"></span></div>
+    </div>
+    <div id="play"></div>`;
+  startTimer(L.time);
+  L.render($('#play'));
+  window.scrollTo({top:0});
+}
+function levelComplete(){
+  stopTimer();dropHandler=null;clearSel();
+  const bonus=Math.max(0,tLeft);
+  state.score+=bonus;state.stamps[state.level]=true;state.lives=Math.min(5,state.lives+1);
+  renderHUD();sfx.win();confetti();
+  const L=LEVELS[state.level],last=state.level===LEVELS.length-1;
+  showModal(`<div class="big-stamp">${L.emoji}</div><h2>Level ${state.level+1} complete!</h2>
+    <p>You earned a stamp in your passport.<br>⏱️ Time bonus: <b>+${bonus}</b></p>`,
+    last?'See my certificate 🏅':'Next level ▶',
+    ()=>last?finish():startLevel(state.level+1));
+}
+function finish(){
+  const stars=state.score>=MAX_SCORE?3:state.score>=MAX_SCORE*.72?2:1;
+  const nm=state.name||'Super Student';
+  $('#stage').innerHTML=`
+    <div class="cert">
+      <div style="font-size:46px">🎟️🎢🎳🪐</div>
+      <h2>Fun Zone Passport</h2>
+      <p>This certificate is awarded to</p>
+      <div class="name"></div>
+      <p>for completing all 4 levels about places of entertainment and plans for the future!</p>
+      <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+      <div class="stats">Final score: <b>${state.score}</b> · Lives left: <b>${state.lives}</b></div>
+      <p class="credit">Created by T.Badria Alfalahi</p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="again">Play again 🔁</button>
+      <button class="btn ghost" id="print">Print certificate 🖨️</button>
+    </div>`;
+  document.querySelector('.cert .name').textContent=nm;
+  $('#again').onclick=showStart;
+  $('#print').onclick=()=>window.print();
+  confetti();
+}
+
+/* ============ LEVEL 1: match names to pictures ============ */
+function L1(play){
+  let left=PLACES.length;
+  play.innerHTML=`<div class="grid">${shuffle(PLACES).map(p=>`
+    <div class="card zone" data-place="${p.id}">
+      <div class="scene" style="--a:${p.a};--b:${p.b}"><span class="main">${p.emoji}</span><span class="deco">${p.deco}</span></div>
+      <div class="slot"></div>
+    </div>`).join('')}</div>
+    <div class="tray sticky">${shuffle(PLACES).map(p=>`<div class="chip" data-id="${p.id}">${p.name}</div>`).join('')}</div>`;
+  dropHandler=(chip,zone)=>{
+    if(!zone.dataset.place||zone.classList.contains('done')) return;
+    if(chip.dataset.id===zone.dataset.place){
+      zone.querySelector('.slot').appendChild(chip);chip.classList.add('locked');zone.classList.add('done');
+      right(10);left--;
+      if(left===0) setTimeout(levelComplete,700);
+    }else wrong(chip,zone);
+  };
+}
+
+/* ============ LEVEL 2: clues -> places ============ */
+function L2(play){
+  const clues=shuffle(PLACES).slice(0,8);let i=0;
+  play.innerHTML=`<div class="clue-area"><div class="prog" id="prog"></div><div id="clueBox"></div></div>
+    <div class="grid small">${shuffle(PLACES).map(p=>`
+      <div class="card zone" data-place="${p.id}">
+        <div class="scene" style="--a:${p.a};--b:${p.b}"><span class="main">${p.emoji}</span></div>
+        <div class="label">${p.name}</div>
+      </div>`).join('')}</div>`;
+  function show(){
+    $('#prog').textContent=`Clue ${i+1} of ${clues.length}`;
+    $('#clueBox').innerHTML=`<div class="chip clue" data-id="${clues[i].id}">${clues[i].clue}</div>`;
+  }
+  show();
+  dropHandler=(chip,zone)=>{
+    if(!zone.dataset.place) return;
+    if(chip.dataset.id===zone.dataset.place){
+      zone.classList.add('flash');setTimeout(()=>zone.classList.remove('flash'),600);
+      right(15);i++;
+      if(i>=clues.length){$('#clueBox').innerHTML='';setTimeout(levelComplete,600)}else show();
+    }else wrong(chip,zone);
+  };
+}
+
+/* ============ LEVEL 3: build the sentence ============ */
+function L3(play){
+  const list=shuffle(SENTS);let i=0;
+  function one(){
+    const words=list[i].split(' ');
+    play.innerHTML=`<div class="prog">Sentence ${i+1} of ${list.length}</div>
+      <div class="slots">${words.map(()=>'<div class="zone slot"></div>').join('')}</div>
+      <div class="tray zone" id="tray">${shuffle(words).map(w=>`<div class="chip">${w}</div>`).join('')}</div>
+      <div class="actions"><button class="btn" id="chk" disabled>Check ✔</button><button class="btn ghost" id="rst">Start again</button></div>
+      <div class="hint">Tip: start with the person (I, We, They…) and end with the time.</div>`;
+    const slots=[...play.querySelectorAll('.slot')],tray=$('#tray'),chk=$('#chk');
+    const sync=()=>{chk.disabled=!slots.every(s=>s.firstElementChild)};
+    dropHandler=(chip,zone)=>{
+      if(zone.classList.contains('slot')){
+        const cur=zone.firstElementChild;
+        if(cur&&cur!==chip){const from=chip.parentElement;(from.classList.contains('slot')?from:tray).appendChild(cur)}
+        zone.appendChild(chip);
+      }else if(zone.id==='tray'){zone.appendChild(chip)}
+      else return;
+      play.querySelectorAll('.chip.bad').forEach(c=>c.classList.remove('bad'));
+      sfx.pop();sync();
+    };
+    $('#rst').onclick=()=>{slots.forEach(s=>{if(s.firstElementChild)tray.appendChild(s.firstElementChild)});sync()};
+    chk.onclick=()=>{
+      const got=slots.map(s=>s.firstElementChild.textContent);
+      if(got.join(' ')===words.join(' ')){
+        slots.forEach(s=>s.firstElementChild.classList.add('locked'));
+        chk.disabled=true;$('#rst').disabled=true;dropHandler=null;
+        right(20);i++;
+        setTimeout(i>=list.length?levelComplete:one,1000);
+      }else{
+        slots.forEach((s,k)=>{if(got[k]!==words[k]) s.firstElementChild.classList.add('bad')});
+        sfx.no();toast('The red words are in the wrong place.','bad');loseLife();
+      }
+    };
+  }
+  one();
+}
+
+/* ============ LEVEL 4: choose the right form ============ */
+function L4(play){
+  const list=shuffle(ITEMS);let i=0;
+  function one(){
+    const it=list[i],parts=it.s.split('___');
+    play.innerHTML=`<div class="prog">Question ${i+1} of ${list.length}</div>
+      <div class="sentence">${parts[0]}<span class="zone gap"></span>${parts[1]}</div>
+      <div class="options">${shuffle(it.o).map(o=>`<div class="chip">${o}</div>`).join('')}</div>`;
+    dropHandler=(chip,zone)=>{
+      if(!zone.classList.contains('gap')||zone.firstElementChild) return;
+      if(chip.textContent===it.a){
+        zone.appendChild(chip);chip.classList.add('locked');dropHandler=null;
+        right(15);i++;
+        setTimeout(i>=list.length?levelComplete:one,1000);
+      }else wrong(chip,zone);
+    };
+  }
+  one();
+}
+
+/* ============ START SCREEN ============ */
+function showStart(){
+  stopTimer();dropHandler=null;$('#hud').hidden=true;
+  $('#stage').innerHTML=`
+    <div class="ticket">
+      <div class="adm">Admit one · Grade 7 · Unit 1 · Lesson 5</div>
+      <h1>Fun Zone Adventure</h1>
+      <p class="sub">Places of entertainment &amp; plans for the future</p>
+      <div class="emoji-row" aria-hidden="true">🎳 🐠 🧸 🔬 🎬 🖼️ ⛸️ 🦁 🎢 🎪 🪐 🧗</div>
+      <div class="perf"></div>
+      <input id="pname" type="text" maxlength="30" placeholder="Write your name" aria-label="Your name" autocomplete="off">
+      <ul class="rules">
+        <li>🧩 4 levels – earn a stamp in each one</li>
+        <li>❤️ You have 5 lives. A mistake costs 1 life.</li>
+        <li>⏱️ Finish fast to get a time bonus</li>
+        <li>👆 Drag the yellow words, or tap and then tap again</li>
+      </ul>
+      <button class="btn" id="go">Start the adventure 🎟️</button>
+      <div class="credit">Created by T.Badria Alfalahi</div>
+    </div>`;
+  $('#go').onclick=startGame;
+  $('#pname').addEventListener('keydown',e=>{if(e.key==='Enter') startGame()});
+}
+showStart();
+</script>
+</body>
+</html>
